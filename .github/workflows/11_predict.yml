@@ -56,5 +56,6 @@ jobs:
     if: needs.predict.outputs.changed == 'true'
     uses: ./.github/workflows/21_pages.yml
     permissions:
+      contents: read
       pages: write
       id-token: write

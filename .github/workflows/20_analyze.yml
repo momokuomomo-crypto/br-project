@@ -55,5 +55,6 @@ jobs:
     if: always()
     uses: ./.github/workflows/21_pages.yml
     permissions:
+      contents: read
       pages: write
       id-token: write
