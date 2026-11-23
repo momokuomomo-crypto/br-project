@@ -1,0 +1,58 @@
+name: 01 Sample
+
+# 02_01 7章。解析の確認用に、指定日の生データ（番組表・成績テキスト、オッズHTML）を
+# samples/ に保存し、その日の収集を試す（data/ は commit しない）。
+
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "YYYYMMDD"
+        default: "20261122"
+  push:
+    branches: [main]
+    paths: [".github/workflows/01_sample.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  sample:
+    runs-on: [self-hosted, jp]
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: powershell
+        working-directory: scripts
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - run: python -m pip install --quiet -r requirements.txt
+      - name: Sample and trial collect
+        run: |
+          $env:PYTHONIOENCODING = "utf-8"
+          $d = "${{ github.event.inputs.date }}"
+          if (-not $d) { $d = "20261122" }
+          python -m br.main sample --date $d
+          $iso = $d.Substring(0,4) + "-" + $d.Substring(4,2) + "-" + $d.Substring(6,2)
+          python -m br.main collect --from $iso --to $iso --pages odds3t 2>&1 | Tee-Object -FilePath ../samples/collect_log.txt
+          Get-ChildItem -Recurse ../data/input | Select-Object -First 40 FullName, Length | Out-File ../samples/collect_files.txt -Encoding utf8
+          Get-ChildItem ../data/input/*/*/program.csv | Select-Object -First 1 | ForEach-Object { Get-Content $_ -TotalCount 8 } | Out-File ../samples/program_head.txt -Encoding utf8
+          Get-ChildItem ../data/input/*/*/result.csv | Select-Object -First 1 | ForEach-Object { Get-Content $_ -TotalCount 8 } | Out-File ../samples/result_head.txt -Encoding utf8
+          Get-ChildItem ../data/input/*/*/payout.csv | Select-Object -First 1 | ForEach-Object { Get-Content $_ -TotalCount 30 } | Out-File ../samples/payout_head.txt -Encoding utf8
+      - name: Commit samples only
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add ../samples
+          git diff --cached --quiet
+          if ($LASTEXITCODE -ne 0) {
+            git commit -m "chore: 解析確認用サンプル [skip ci]"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          }
+          git clean -fdq ../data
+          git checkout -- ../data
+          exit 0
