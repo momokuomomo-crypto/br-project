@@ -38,14 +38,14 @@ def git_push(message: str) -> None:
     raise RuntimeError("git push に失敗しました")
 
 
-def backfill(start: dt.date, end: dt.date, pages, with_odds=True, min_interval=1.0, budget_min=None) -> None:
+def backfill(start: dt.date, end: dt.date, min_interval=1.0, budget_min=None) -> None:
     t0 = time.monotonic()
     for a, b in months_desc(start, end):
         left = None if budget_min is None else budget_min - (time.monotonic() - t0) / 60
         if left is not None and left <= 0:
             print("時間上限に達したため終了します（次回は続きから）")
             break
-        stats = collect(a, b, pages=pages, with_odds=with_odds, min_interval=min_interval,
+        stats = collect(a, b, min_interval=min_interval,
                         newest_first=True, time_budget_min=left)
         status.record(f"backfill {a:%Y-%m}", stats)
-        git_push(f"data: 過去データ取り込み {a:%Y-%m}（{'オッズあり' if with_odds else '番組表・成績'}） [skip ci]")
+        git_push(f"data: 過去データ取り込み {a:%Y-%m} [skip ci]")

@@ -1,6 +1,5 @@
-"""合成データでの通し確認：収集形式のCSV → データセット → 学習 → 検証。"""
+"""合成データでの通し確認：入力CSV → データセット → 学習 → 検証。"""
 import datetime as dt
-import itertools
 
 import numpy as np
 
@@ -8,55 +7,52 @@ from br.analysis import backtest, dataset, model as M
 from br.collect import store
 
 
-def make_data(root, n_days=200, seed=0):
+def make_data(root, n_days=240, seed=0):
     rng = np.random.default_rng(seed)
-    perms = list(itertools.permutations(range(1, 7), 3))
-    prog, res, pay, odds = [], [], [], []
+    prog, prev, res, pay = [], [], [], []
     start = dt.date(2025, 1, 1)
     for d in range(n_days):
         hd = (start + dt.timedelta(days=d)).strftime("%Y%m%d")
         for rno in range(1, 7):
-            skill = rng.normal(size=6) + np.array([1.2, .4, .2, 0, -.2, -.4])
-            nat = 5 + skill + rng.normal(scale=.3, size=6)
-            # 真の強さ：市場は skill の一部しか見ていない（モデルが補正できる余地）
+            skill = rng.normal(size=6) + np.array([1.5, .5, .3, 0, -.2, -.4])
+            nat = 5 + skill + rng.normal(scale=.4, size=6)
+            ext = 6.8 - 0.05 * skill + rng.normal(scale=.03, size=6)
             s = np.exp(skill)
-            order = []
-            left = list(range(6))
-            for _ in range(3):
+            left, order = list(range(6)), []
+            for _ in range(6):
                 w = s[left] / s[left].sum()
                 order.append(left.pop(rng.choice(len(left), p=w)))
-            mkt = np.exp(0.6 * skill)
-            p = {}
-            for a, b, c in perms:
-                pa = mkt[a-1] / mkt.sum(); pb = mkt[b-1] / (mkt.sum() - mkt[a-1]); pc = mkt[c-1] / (mkt.sum() - mkt[a-1] - mkt[b-1])
-                p[(a, b, c)] = pa * pb * pc
-            row = {"date": hd, "jcd": "02", "rno": rno, "fetched_at": ""}
-            for (a, b, c), v in p.items():
-                row[f"tri_{a}-{b}-{c}"] = round(max(1.0, 0.75 / v), 1)
-            odds.append(row)
-            win = "-".join(str(o + 1) for o in order)
-            pay.append({"date": hd, "jcd": "02", "rno": rno, "bet_type": "trifecta", "combo": win, "payout": int(row[f"tri_{win}"] * 100), "popularity": ""})
+            win = "-".join(str(o + 1) for o in order[:3])
+            # 払戻：世間の見立て（全国勝率だけで判断）から決まる。展示タイムに表れる本当の強さは反映されない
+            pub = np.exp(1.0 * (nat - 5))
+            a, b, c = order[:3]
+            q3 = pub[a] / pub.sum() * pub[b] / (pub.sum() - pub[a]) * pub[c] / (pub.sum() - pub[a] - pub[b])
+            q1 = pub[a] / pub.sum()
+            pay.append({"date": hd, "jcd": "02", "rno": rno, "bet_type": "trifecta", "combo": win,
+                        "payout": int(75 / q3 * np.exp(rng.normal(scale=.2)) // 10 * 10)})
+            pay.append({"date": hd, "jcd": "02", "rno": rno, "bet_type": "win", "combo": str(a + 1),
+                        "payout": max(100, int(75 / q1 * np.exp(rng.normal(scale=.1)) // 10 * 10))})
             for lane in range(1, 7):
-                prog.append({"date": hd, "jcd": "02", "rno": rno, "lane": lane, "racer_class": "A1" if skill[lane-1] > 1 else "B1",
-                             "nat_win": round(nat[lane-1], 2), "loc_win": round(nat[lane-1], 2), "motor_2r": 30, "boat_2r": 30})
-                fin = order.index(lane - 1) + 1 if lane - 1 in order else 4 + lane % 3
-                res.append({"date": hd, "jcd": "02", "rno": rno, "lane": lane, "finish": str(fin)})
-    store.upsert("program", prog, root); store.upsert("result", res, root)
-    store.upsert("payout", pay, root); store.upsert("odds", odds, root)
+                prog.append({"date": hd, "jcd": "02", "rno": rno, "lane": lane, "grade": "一般", "deadline": "12:00",
+                             "racer_class": "A1" if nat[lane-1] > 6 else "B1", "nat_win": round(nat[lane-1], 2)})
+                prev.append({"date": hd, "jcd": "02", "rno": rno, "lane": lane, "ex_time": round(ext[lane-1], 2), "course": lane})
+                res.append({"date": hd, "jcd": "02", "rno": rno, "lane": lane, "place": str(order.index(lane - 1) + 1)})
+    for k, rows in (("program", prog), ("preview", prev), ("result", res), ("payout", pay)):
+        store.upsert(k, rows, root)
 
 
 def test_end_to_end(tmp_path, monkeypatch):
+    monkeypatch.setattr(backtest, "MIN_BETS", 30)
     root = tmp_path / "input"
     make_data(root)
-    monkeypatch.setattr(store, "INPUT_DIR", root)
-    monkeypatch.setattr(dataset.store, "INPUT_DIR", root)
     races = dataset.load(root)
-    assert len(races.keys) == 1200
+    assert len(races) == 240 * 6
     m = M.fit(races)
-    assert M.log_loss(m, races) < M.log_loss(M.market_only(), races)
-    assert m.w[1] > 0  # class / skill 補正が正
-    monkeypatch.setattr(backtest.dataset, "load", lambda: races)
-    monkeypatch.setattr(backtest, "MIN_BETS", 20)
-    rep = backtest.run(out_dir=tmp_path / "out", valid_start="20250401", test_start="20250601")
-    assert rep["selected"] is not None
+    assert M.log_loss(m.proba(races), races) < np.log(120) - 0.3
+    pm = M.fit_payout(races)
+    assert "trifecta" in pm.coef and "win" in pm.coef
+    rep = backtest.run(out_dir=tmp_path / "out", valid_start="20250501", test_start="20250701", races=races)
+    assert rep["periods"]["test"][2] > 0
+    assert rep["selected"] is not None and "test" in rep
     assert (tmp_path / "out" / "model.json").exists()
+    assert (tmp_path / "out" / "backtest_report.json").exists()

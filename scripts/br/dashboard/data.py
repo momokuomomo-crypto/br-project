@@ -26,13 +26,13 @@ def collection_status() -> list[dict]:
     rows = []
     for jcd, name in VENUES.items():
         vdir = store.INPUT_DIR / f"{jcd}_{name}"
-        res, odd = set(), set()
+        res, pv = set(), set()
         for m in sorted(vdir.glob("*")) if vdir.exists() else []:
             res |= {(r["date"], r["rno"]) for r in store.read("result", m)}
-            odd |= {(r["date"], r["rno"]) for r in store.read("odds", m)}
+            pv |= {(r["date"], r["rno"]) for r in store.read("preview", m)}
         days = sorted({d for d, _ in res})
         rows.append({"jcd": jcd, "name": name, "first": days[0] if days else "", "last": days[-1] if days else "",
-                     "days": len(days), "races": len(res), "odds": len(res & odd)})
+                     "days": len(days), "races": len(res), "preview": len(res & pv)})
     return rows
 
 

@@ -2,10 +2,10 @@
 
 data/input/{jcd}_{場名}/{YYYY-MM}/ に、場・月ごとに次のCSVを置く。
 
-* program.csv : 出走表（番組表）
-* result.csv  : 競走成績（着順・ST等）
+* program.csv : 出走表
+* preview.csv : 直前情報（展示タイム・進入・気象）
+* result.csv  : 結果（着順・進入・ST）
 * payout.csv  : 払戻金
-* odds.csv    : 確定オッズ（1レース1行、単勝6・2連単30・3連単120列）
 
 同じキー（date, jcd, rno[, lane / bet_type, combo]）の行は上書きする（再取得しても重複しない）。
 """
@@ -15,25 +15,17 @@ import csv
 import os
 from pathlib import Path
 
-from br.collect.lzh_parsers import PAYOUT_COLUMNS, PROGRAM_COLUMNS, RESULT_COLUMNS
-from br.collect.odds import EXACTA_KEYS, TRIFECTA_KEYS, WIN_KEYS
+from br.collect.openapi import PAYOUT_COLUMNS, PREVIEW_COLUMNS, PROGRAM_COLUMNS, RESULT_COLUMNS
 from br.venues import VENUES
 
 ROOT = Path(__file__).resolve().parents[3]
 INPUT_DIR = ROOT / "data" / "input"
 
-ODDS_COLUMNS = (
-    ["date", "jcd", "rno", "fetched_at"]
-    + [f"win_{k}" for k in WIN_KEYS]
-    + [f"ex_{k}" for k in EXACTA_KEYS]
-    + [f"tri_{k}" for k in TRIFECTA_KEYS]
-)
-
 FILES = {
     "program": (PROGRAM_COLUMNS, ("date", "jcd", "rno", "lane")),
     "result": (RESULT_COLUMNS, ("date", "jcd", "rno", "lane")),
     "payout": (PAYOUT_COLUMNS, ("date", "jcd", "rno", "bet_type", "combo")),
-    "odds": (ODDS_COLUMNS, ("date", "jcd", "rno")),
+    "preview": (PREVIEW_COLUMNS, ("date", "jcd", "rno", "lane")),
 }
 
 

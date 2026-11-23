@@ -17,7 +17,6 @@ def record(kind: str, stats: list[dict]) -> None:
         "kind": kind,
         "days": len(stats),
         "races": sum(s.get("races", 0) for s in stats),
-        "odds_new": sum(s.get("odds_new", 0) for s in stats),
         "errors": sum(s.get("errors", 0) + (1 if "error" in s else 0) for s in stats),
     })
     PATH.write_text(json.dumps(hist[-50:], ensure_ascii=False, indent=1), encoding="utf-8")

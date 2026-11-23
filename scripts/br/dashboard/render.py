@@ -86,8 +86,8 @@ def build(out_dir: str) -> Path:
     else:
         body = '<p>現在、おすすめはありません（割安な買い目が無いレースは見送ります）。</p>'
     seen = len({(p["jcd"], p["rno"]) for p in preds})
-    rtxt = f'ルール：{esc(LABEL.get(rule["bet_type"]))}、期待値 {rule["min_ev"]} 以上、オッズ {rule["max_odds"]} 倍以下、1レース{rule["max_per_race"]}点まで、1点100円。' if rule else "運用モデルはまだありません。"
-    parts.append(f'<section class="card"><h2>次のレースのおすすめ</h2>{body}<div class="note">{seen}レースを判定し、購入{len(buys)}点。{rtxt}オッズは締切前に取得した値で、確定オッズとは異なります。</div></section>')
+    rtxt = f'ルール：{esc(LABEL.get(rule["bet_type"]))}、期待値 {rule["min_ev"]} 以上、想定オッズ {rule["max_odds"]} 倍以下、1レース{rule["max_per_race"]}点まで、1点100円。' if rule else "運用モデルはまだありません。"
+    parts.append(f'<section class="card"><h2>次のレースのおすすめ</h2>{body}<div class="note">{seen}レースを判定し、購入{len(buys)}点。{rtxt}想定オッズは過去の払戻実績から推定した値で、実際のオッズではありません（オッズの履歴を自動で取れる正規の入手先が無いため）。収支は実際の払戻金で計算します。</div></section>')
 
     # 収支
     live, bt, rep = d["live"], d["backtest"], d["report"]
@@ -95,25 +95,24 @@ def build(out_dir: str) -> Path:
                  f'{sparkline(live["series"])}{monthly(live)}<div class="note">未確定 {d["live_pending"]}点。実際の購入記録ではなくシミュレーションです。</div></section>')
     if rep and rep.get("test"):
         per = rep["periods"]
-        mk = rep.get("test_market_only") or {}
+        mk = rep.get("test_top_prob") or {}
         parts.append(
             f'<section class="card"><h2>検証：学習に使っていない期間の成績</h2>'
             f'<div class="sub">学習 {esc(per["train"][0])}〜（{per["train"][2]:,}R） / ルール選定 {esc(per["valid"][0])}〜（{per["valid"][2]:,}R） / 確認 {esc(per["test"][0])}〜{esc(per["test"][1])}（{per["test"][2]:,}R）</div>'
             f'{kpis(bt)}{sparkline(bt["series"])}{monthly(bt)}'
-            f'<div class="note">確認期間の成績は、モデルの学習にもルール選びにも使っていません。参考：同じルールでオッズの見立てだけを使った場合の回収率 {pct(mk.get("roi"))}。'
-            f'確定オッズで計算しているため、実際に買う時点のオッズとはずれがあります。</div></section>')
+            f'<div class="note">確認期間の成績は、モデルの学習にもルール選びにも使っていません。参考：期待値を見ずに、確率の高い買い目を毎レース同じ点数買った場合の回収率 {pct(mk.get("roi"))}。収支は実際の払戻金で計算しています。</div></section>')
 
     # 収集状況
     col = d["collection"]
-    total, with_odds = sum(c["races"] for c in col), sum(c["odds"] for c in col)
+    total, with_pv = sum(c["races"] for c in col), sum(c["preview"] for c in col)
     rows = "".join(
-        f'<tr><td>{esc(c["name"])}</td><td>{esc(c["first"])}</td><td>{esc(c["last"])}</td><td>{c["days"]:,}</td><td>{c["races"]:,}</td><td>{c["odds"]:,}</td>'
-        f'<td style="min-width:90px"><div class="bar"><i style="width:{(c["odds"] / c["races"] * 100) if c["races"] else 0:.0f}%"></i></div></td></tr>' for c in col)
-    parts.append(f'<section class="card"><h2>データ収集状況</h2><div class="sub">成績 {total:,}レース・うち確定オッズあり {with_odds:,}レース</div>'
-                 f'<div class="tbl"><table><tr><th>場</th><th>最初</th><th>最新</th><th>開催日</th><th>レース</th><th>オッズあり</th><th>オッズ取得率</th></tr>{rows}</table></div></section>')
+        f'<tr><td>{esc(c["name"])}</td><td>{esc(c["first"])}</td><td>{esc(c["last"])}</td><td>{c["days"]:,}</td><td>{c["races"]:,}</td><td>{c["preview"]:,}</td>'
+        f'<td style="min-width:90px"><div class="bar"><i style="width:{min(100, c["days"] / 18.26):.0f}%"></i></div></td></tr>' for c in col)
+    parts.append(f'<section class="card"><h2>データ収集状況</h2><div class="sub">結果 {total:,}レース・うち直前情報あり {with_pv:,}レース（データ元：Boatrace Open API、非公式）。バーは5年分（約1,826日）に対する開催日数の目安</div>'
+                 f'<div class="tbl"><table><tr><th>場</th><th>最初</th><th>最新</th><th>開催日</th><th>レース</th><th>直前情報あり</th><th>5年分の進み具合</th></tr>{rows}</table></div></section>')
 
-    runs = "".join(f'<tr><td>{esc(r["at"])}</td><td class="l">{esc(r["kind"])}</td><td>{r["days"]}</td><td>{r["races"]}</td><td>{r["odds_new"]}</td><td>{r["errors"]}</td></tr>' for r in d["runs"])
-    parts.append(f'<section class="card"><h2>自動実行の履歴</h2><div class="tbl"><table><tr><th>日時</th><th class="l">処理</th><th>日数</th><th>レース</th><th>オッズ新規</th><th>失敗</th></tr>{runs}</table></div></section></main>')
+    runs = "".join(f'<tr><td>{esc(r["at"])}</td><td class="l">{esc(r["kind"])}</td><td>{r["days"]}</td><td>{r["races"]}</td><td>{r["errors"]}</td></tr>' for r in d["runs"])
+    parts.append(f'<section class="card"><h2>自動実行の履歴</h2><div class="tbl"><table><tr><th>日時</th><th class="l">処理</th><th>日数</th><th>レース</th><th>失敗</th></tr>{runs}</table></div></section></main>')
 
     page = (f'<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
             f'<title>競艇 期待値派</title><style>{CSS}</style></head><body>{"".join(parts)}</body></html>')

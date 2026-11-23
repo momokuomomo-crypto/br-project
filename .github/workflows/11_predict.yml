@@ -1,14 +1,13 @@
 name: 11 Predict
 
 # 06_01_自動実行設計.md 4章。
-# 8:00〜21:59（JST）の15分ごとに、締切が近いレースの発売中オッズを取得して
-# 期待値派の予想を data/predictions/ に記録し、ダッシュボードを更新する。
+# 8:00〜21:59（JST）の10分ごとに、締切が近く直前情報がそろったレースを予想して
+# data/predictions/ に記録し、ダッシュボードを更新する。
 
 on:
-  # 定期実行は停止中：公式サイトがスクリプトからの取得を拒否するため（00_要件定義 6章）
-  # schedule:
-  #   - cron: "*/15 23 * * *"   # 8:00〜8:59 JST
-  #   - cron: "*/15 0-12 * * *" # 9:00〜21:59 JST
+  schedule:
+    - cron: "*/10 23 * * *"   # 8:00〜8:59 JST
+    - cron: "*/10 0-12 * * *" # 9:00〜21:59 JST
   workflow_dispatch:
 
 concurrency:
@@ -17,41 +16,40 @@ concurrency:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 jobs:
   predict:
-    runs-on: [self-hosted, jp]
-    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     outputs:
       changed: ${{ steps.commit.outputs.changed }}
     defaults:
       run:
-        shell: powershell
         working-directory: scripts
     steps:
       - uses: actions/checkout@v4
         with:
           ref: main
-      - name: Install dependencies
-        run: python -m pip install --quiet -r requirements.txt
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
       - name: Predict
-        run: |
-          $env:PYTHONIOENCODING = "utf-8"
-          python -m br.main predict
+        run: python -m br.main predict
       - name: Commit and push
         id: commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add ../data
-          git diff --cached --quiet
-          if ($LASTEXITCODE -ne 0) {
-            git commit -m "data: 当日の予想を記録"
+          git add ../data/predictions
+          if ! git diff --cached --quiet; then
+            git commit -m "data: 当日の予想を記録 [skip ci]"
             git pull --rebase -X theirs origin main
             git push origin HEAD:main
-            "changed=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
-          }
-          exit 0
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
 
   pages:
     needs: predict
