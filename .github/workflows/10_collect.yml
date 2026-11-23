@@ -1,0 +1,87 @@
+name: 10 Collect
+
+# 06_01_自動実行設計.md 3章。
+# 公式サイトは海外（GitHub のクラウド実行環境）からのアクセスを拒否するため、
+# 収集は日本の回線にある自前の実行マシン（self-hosted, jp）で行う。
+# 毎朝5:30（JST）に前日分（＋取りこぼし直近7日）を集めて main へ push し、
+# 続けてクラウドで分析・ダッシュボード更新を行う。
+# 手動実行（期間指定）では過去データを新しい月から1か月ずつ取り込む（backfill）。
+
+on:
+  schedule:
+    - cron: "30 20 * * *" # 20:30 UTC = 5:30 JST
+  workflow_dispatch:
+    inputs:
+      from:
+        description: "取り込み開始日（YYYY-MM-DD、空欄なら昨日分のみ）"
+        required: false
+      to:
+        description: "取り込み終了日（YYYY-MM-DD）"
+        required: false
+      odds:
+        description: "確定オッズも取る"
+        type: boolean
+        default: true
+      budget_min:
+        description: "最大実行時間（分）"
+        default: "4200"
+
+concurrency:
+  group: 10-collect
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  collect:
+    runs-on: [self-hosted, jp]
+    timeout-minutes: 4320
+    defaults:
+      run:
+        shell: powershell
+        working-directory: scripts
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Install dependencies
+        run: python -m pip install --quiet -r requirements.txt
+      - name: Collect
+        env:
+          FROM: ${{ github.event.inputs.from }}
+          TO: ${{ github.event.inputs.to }}
+          ODDS: ${{ github.event.inputs.odds }}
+          BUDGET: ${{ github.event.inputs.budget_min }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          $env:PYTHONIOENCODING = "utf-8"
+          if ($env:FROM) {
+            $a = @("--from", $env:FROM, "--to", $env:TO, "--budget-min", $env:BUDGET)
+            if ($env:ODDS -eq "false") { $a += "--no-odds" }
+            python -m br.main backfill @a
+          } else {
+            python -m br.main yesterday
+          }
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Commit and push
+        if: always()
+        run: |
+          git add ../data
+          git diff --cached --quiet
+          if ($LASTEXITCODE -ne 0) {
+            git commit -m "data: 番組表・成績・確定オッズを収集"
+            git pull --rebase -X theirs origin main
+            git push origin HEAD:main
+          }
+          exit 0
+
+  analyze:
+    needs: collect
+    if: always()
+    uses: ./.github/workflows/20_analyze.yml
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
