@@ -1,6 +1,6 @@
 name: 01 Sample
 
-# 02_01 7章。解析の確認用に、指定日の生データ（番組表・成績テキスト、オッズHTML）を
+# 02_01 7章（試行2）。解析の確認用に、指定日の生データ（番組表・成績テキスト、オッズHTML）を
 # samples/ に保存し、その日の収集を試す（data/ は commit しない）。
 
 on:
@@ -54,5 +54,4 @@ jobs:
             git push origin HEAD:main
           }
           git clean -fdq ../data
-          git checkout -- ../data
           exit 0

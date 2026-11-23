@@ -13,7 +13,6 @@ import requests
 
 BOATRACE = "https://www.boatrace.jp/owpc/pc/race"
 MBRACE = "https://www1.mbrace.or.jp/od2"
-USER_AGENT = "br-project/1.0 (personal research; low-rate collector)"
 MIN_INTERVAL = 1.0
 RETRIES = 4
 TIMEOUT = 30
@@ -22,7 +21,6 @@ TIMEOUT = 30
 class Client:
     def __init__(self, min_interval: float = MIN_INTERVAL):
         self.session = requests.Session()
-        self.session.headers["User-Agent"] = USER_AGENT
         self.min_interval = min_interval
         self._lock = threading.Lock()
         self._last = 0.0
