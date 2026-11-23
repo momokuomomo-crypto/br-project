@@ -5,9 +5,10 @@ name: 11 Predict
 # 期待値派の予想を data/predictions/ に記録し、ダッシュボードを更新する。
 
 on:
-  schedule:
-    - cron: "*/15 23 * * *"   # 8:00〜8:59 JST
-    - cron: "*/15 0-12 * * *" # 9:00〜21:59 JST
+  # 定期実行は停止中：公式サイトがスクリプトからの取得を拒否するため（00_要件定義 6章）
+  # schedule:
+  #   - cron: "*/15 23 * * *"   # 8:00〜8:59 JST
+  #   - cron: "*/15 0-12 * * *" # 9:00〜21:59 JST
   workflow_dispatch:
 
 concurrency:

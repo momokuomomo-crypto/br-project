@@ -8,8 +8,9 @@ name: 10 Collect
 # 手動実行（期間指定）では過去データを新しい月から1か月ずつ取り込む（backfill）。
 
 on:
-  schedule:
-    - cron: "30 20 * * *" # 20:30 UTC = 5:30 JST
+  # 定期実行は停止中：公式サイトがスクリプトからの取得を拒否するため（00_要件定義 6章）
+  # schedule:
+  #   - cron: "30 20 * * *" # 20:30 UTC = 5:30 JST
   workflow_dispatch:
     inputs:
       from:
