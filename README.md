@@ -11,7 +11,7 @@
 
 ```mermaid
 flowchart LR
-  API[Boatrace Open API<br>出走表・直前情報・結果] -->|毎朝・10分ごと| Collect[収集・当日予想<br>GitHub Actions]
+  API[Boatrace Open API<br>出走表・直前情報・結果] -->|毎朝・5分ごと| Collect[収集・当日予想<br>GitHub Actions]
   Collect -->|push data/| Repo[(br-project)]
   Repo --> Analyze[分析・検証]
   Analyze --> Pages[ダッシュボード<br>GitHub Pages]

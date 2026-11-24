@@ -1,8 +1,9 @@
 """当日の予想（04_01 6章）。
 
-当日の出走表・直前情報（Open API の today.json）を取得し、締切まで LEAD_MIN〜WINDOW_MIN 分で
-直前情報（展示タイム）がそろったレースについて、運用モデル（data/output/model.json）と
-購入ルールで期待値を計算し、data/predictions/YYYYMMDD.csv に追記する。
+当日の出走表・直前情報（Open API の api/v1、約10分間隔で更新）を取得し、展示タイムが6艇そろい、
+締切まで LEAD_MIN 分以上あるレースのうち、まだ予想していないものを、運用モデル
+（data/output/model.json）と購入ルールで期待値を計算し、data/predictions/YYYYMMDD.csv に追記する。
+締切までに直前情報が出なかったレースは予想しない（記録の lead_min は予想した時点の締切までの分）。
 購入対象が無いレースも「見送り」として1行記録する（毎レース買わない）。
 """
 from __future__ import annotations
@@ -21,9 +22,8 @@ from br.collect import store
 JST = dt.timezone(dt.timedelta(hours=9))
 PRED_DIR = store.ROOT / "data" / "predictions"
 MODEL_PATH = store.ROOT / "data" / "output" / "model.json"
-WINDOW_MIN = 30
 LEAD_MIN = 1
-COLUMNS = ["date", "jcd", "rno", "grade", "deadline", "predicted_at", "bet_type", "combo", "prob", "odds", "ev", "decision"]
+COLUMNS = ["date", "jcd", "rno", "grade", "deadline", "predicted_at", "lead_min", "bet_type", "combo", "prob", "odds", "ev", "decision"]
 
 
 def _existing(path: Path) -> set[tuple]:
@@ -48,9 +48,9 @@ def predict(now: dt.datetime | None = None) -> int:
         return 0
     model, payout, meta = load_saved(MODEL_PATH)
     rule = ev.Rule(**meta["rule"])
-    client = A.Client()
-    progs = [r for r in A.program_rows(client.get("programs", None) or []) if r["date"] == hd]
-    prevs = [r for r in A.preview_rows(client.get("previews", None) or []) if r["date"] == hd]
+    progs, prevs = A.get_live(hd)
+    if not dataset.USE_PREVIEW:
+        prevs = []
     prog, prev = _group(progs), _group(prevs)
     path = PRED_DIR / f"{hd}.csv"
     done = _existing(path)
@@ -61,15 +61,15 @@ def predict(now: dt.datetime | None = None) -> int:
             continue
         dl = dt.datetime.strptime(f"{hd} {entries[0]['deadline']}", "%Y%m%d %H:%M").replace(tzinfo=JST)
         mins = (dl - now).total_seconds() / 60
-        pv = prev.get(key, [])
-        ready = len(pv) == 6 and all(p.get("ex_time") not in ("", "0", "0.0") for p in pv)
+        pv = prev.get(key, []) if dataset.USE_PREVIEW else []
+        ready = not dataset.USE_PREVIEW or (len(pv) == 6 and all(p.get("ex_time") not in ("", "0", "0.0") for p in pv))
         n_ready += ready
-        n_window += LEAD_MIN <= mins <= WINDOW_MIN
-        if not (LEAD_MIN <= mins <= WINDOW_MIN) or not ready:
+        n_window += mins >= LEAD_MIN
+        if mins < LEAD_MIN or not ready:
             continue
         base = {"date": hd, "jcd": key[0], "rno": key[1], "grade": entries[0]["grade"],
-                "deadline": entries[0]["deadline"], "predicted_at": now.strftime("%H:%M")}
-        r = dataset.single_race((hd, *key), base["grade"], entries, pv)
+                "deadline": entries[0]["deadline"], "predicted_at": now.strftime("%H:%M"), "lead_min": int(mins)}
+        r = dataset.single_race((hd, *key), base["grade"], entries, pv, meta.get("venue_lane"))
         if r is None:
             out.append({**base, "decision": "対象外（欠場）"})
             continue
@@ -89,6 +89,6 @@ def predict(now: dt.datetime | None = None) -> int:
             if new:
                 w.writeheader()
             w.writerows(out)
-    print(f"出走表 {len(prog)}R・直前情報 {len(prev)}R（展示タイム6艇そろい {n_ready}R）・締切{LEAD_MIN}〜{WINDOW_MIN}分前 {n_window}R")
+    print(f"出走表 {len(prog)}R・判定可 {n_ready}R・締切{LEAD_MIN}分以上前 {n_window}R・予想済み {len(done)}R")
     print(f"{hd} {now:%H:%M}: {len({(o['jcd'], o['rno']) for o in out})}レースを判定、購入{sum(o['decision'] == '購入' for o in out)}点")
     return len(out)

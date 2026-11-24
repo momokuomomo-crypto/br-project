@@ -24,6 +24,8 @@ from br.collect.store import ROOT
 
 OUT_DIR = ROOT / "data" / "output"
 MIN_BETS = 300
+# 券種：まずは単勝だけで運用する（2026-11-25 方針）。ev.BET_TYPES に戻せば3券種から選ぶ
+BET_TYPES = ("win",)
 GRID_EV = (1.0, 1.1, 1.2, 1.3, 1.5, 2.0)
 GRID_ODDS = {"win": (5, 10, 30), "exacta": (20, 50, 150), "trifecta": (50, 200, 1000)}
 
@@ -57,7 +59,7 @@ def run(out_dir: Path = OUT_DIR, valid_start: str | None = None, test_start: str
     m1, pm1 = M.fit(R_tr), M.fit_payout(R_tr)
     p_va = m1.proba(R_va)
     candidates = []
-    for bt in ev.BET_TYPES:
+    for bt in BET_TYPES:
         if bt not in pm1.coef:
             continue
         p, odds, e = ev.ev_table(R_va, p_va, pm1, bt)
@@ -93,7 +95,8 @@ def run(out_dir: Path = OUT_DIR, valid_start: str | None = None, test_start: str
         report["test_top_prob"] = ev.settle(R_te, top, rule.bet_type)
         rows = ev.ledger(R_te, p, odds, e, mask, rule)
         m3, pm3 = M.fit(races), M.fit_payout(races)
-        M.save(out_dir / "model.json", m3, pm3, {"rule": rule.to_dict(), "trained_until": max(dates), "n_races": len(races)})
+        M.save(out_dir / "model.json", m3, pm3, {"rule": rule.to_dict(), "trained_until": max(dates), "n_races": len(races),
+                                                       "venue_lane": races.venue_lane})
     with (out_dir / "backtest_ledger.csv").open("w", encoding="utf-8", newline="") as f:
         w = csv.DictWriter(f, fieldnames=["date", "jcd", "rno", "grade", "bet_type", "combo", "prob", "odds", "ev", "stake", "return"], lineterminator="\n")
         w.writeheader()

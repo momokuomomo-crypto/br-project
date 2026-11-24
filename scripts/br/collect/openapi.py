@@ -125,3 +125,62 @@ def result_rows(races: list[dict]) -> tuple[list[dict], list[dict]]:
                 pay.append({**k, "bet_type": bt, "combo": str(p.get("combination", "")).replace("=", "-"),
                             "payout": int(p["payout"])})
     return res, pay
+
+
+# ---- 当日予想用：新しい統合API（api/v1、約10分間隔で更新、2026-01以降） ----
+# https://boatraceopenapi.github.io/api/v1/{YYYY}/{YYYYMMDD}.json
+# 旧 {kind}/v2 の当日分は直前情報が1日2〜3回しか更新されないため、当日予想はこちらを使う。
+LIVE_PATH = "api/v1/{y}/{hd}.json"
+
+
+def get_live(hd: str, session: requests.Session | None = None) -> tuple[list[dict], list[dict]]:
+    """当日の (出走表の行, 直前情報の行) を旧形式と同じ列で返す。"""
+    s = session or requests.Session()
+    url = f"{BASE}/{LIVE_PATH.format(y=hd[:4], hd=hd)}"
+    err = None
+    for i in range(RETRIES + 1):
+        try:
+            r = s.get(url, timeout=60)
+            if r.status_code == 404:
+                return [], []
+            if r.status_code == 200:
+                return live_rows(r.json())
+            err = f"HTTP {r.status_code}"
+        except (requests.RequestException, ValueError) as e:
+            err = str(e)
+        time.sleep(min(60, 5 * 2 ** i))
+    raise RuntimeError(f"取得に失敗しました: {url}: {err}")
+
+
+def live_rows(d: dict) -> tuple[list[dict], list[dict]]:
+    progs, prevs = [], []
+    for st in ((d.get("programs") or {}).get("stadiums") or {}).values():
+        for race in (st.get("races") or {}).values():
+            k = {"date": _date(race["date"]), "jcd": f"{int(race['stadium_number']):02d}", "rno": int(race["race_number"])}
+            closed = str(race.get("closed_at") or "")
+            base = {**k, "deadline": closed[11:16], "grade": GRADE.get(race.get("grade_number"), ""),
+                    "title": _v(race.get("title")), "race_type": _v(race.get("subtitle")), "distance": _v(race.get("distance"))}
+            for lane, b in (race.get("racers") or {}).items():
+                progs.append({**base, "lane": int(lane), "racer_id": _v(b.get("number")), "racer_name": _v(b.get("name")),
+                              "racer_class": CLASS.get(b.get("rank_number"), ""), "age": _v(b.get("age")),
+                              "weight": _v(b.get("weight")), "branch": _v(b.get("branch_number")),
+                              "flying": _v(b.get("flying_count")), "late": _v(b.get("late_count")),
+                              "avg_st": _v(b.get("average_start_timing")),
+                              "nat_win": _v(b.get("national_win_rate")), "nat_2r": _v(b.get("national_top_2_percent")),
+                              "nat_3r": _v(b.get("national_top_3_percent")), "loc_win": _v(b.get("local_win_rate")),
+                              "loc_2r": _v(b.get("local_top_2_percent")), "loc_3r": _v(b.get("local_top_3_percent")),
+                              "motor_no": _v(b.get("motor_number")), "motor_2r": _v(b.get("motor_top_2_percent")),
+                              "motor_3r": _v(b.get("motor_top_3_percent")), "boat_no": _v(b.get("boat_number")),
+                              "boat_2r": _v(b.get("boat_top_2_percent")), "boat_3r": _v(b.get("boat_top_3_percent"))})
+            pv = race.get("preview") or {}
+            pbase = {**k, "wind": _v(pv.get("wind_speed")), "wind_dir": _v(pv.get("wind_direction_number")),
+                     "wave": _v(pv.get("wave_height")), "weather": _v(pv.get("weather_number")),
+                     "temp": _v(pv.get("air_temperature")), "water_temp": _v(pv.get("water_temperature"))}
+            for lane, b in (pv.get("racers") or {}).items():
+                if b.get("exhibition_time") in (None, 0) and b.get("course_number") is None:
+                    continue
+                prevs.append({**pbase, "lane": int(lane), "course": _v(b.get("course_number")),
+                              "ex_st": _v(b.get("start_timing")), "ex_time": _v(b.get("exhibition_time")),
+                              "weight": _v(b.get("weight")), "weight_adj": _v(b.get("weight_adjustment")),
+                              "tilt": _v(b.get("tilt_adjustment"))})
+    return progs, prevs
