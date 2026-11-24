@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-25 03:19",
+  "generated_at": "2026-11-25 05:27",
   "periods": {
     "train": [
       "20211124",
@@ -20,7 +20,7 @@
   "log_loss": {
     "uniform": 4.787491742782046,
     "model_valid": 3.820023138616858,
-    "model_test": 3.8293098362598625
+    "model_test": 3.8293098362598634
   },
   "candidates": [
     {
