@@ -11,6 +11,11 @@ on:
     - cron: "*/30 23 * * *"   # 8:00〜8:59 JST
     - cron: "*/30 0-12 * * *" # 9:00〜21:59 JST
   workflow_dispatch:
+    inputs:
+      once:
+        description: "時間帯に関係なく1回だけ判定する（確認用）"
+        type: boolean
+        default: false
 
 concurrency:
   group: 11-predict
@@ -35,7 +40,11 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -r requirements.txt
+      - name: Predict once (確認用)
+        if: inputs.once
+        run: python -m br.main predict
       - name: Predict loop
+        if: ${{ !inputs.once }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
