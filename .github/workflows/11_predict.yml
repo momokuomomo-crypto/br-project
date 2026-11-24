@@ -1,13 +1,15 @@
 name: 11 Predict
 
 # 06_01_自動実行設計.md 4章。
-# 8:00〜21:59（JST）の10分ごとに、締切が近く直前情報がそろったレースを予想して
-# data/predictions/ に記録し、ダッシュボードを更新する。
+# GitHub の定期実行は混雑時に大きく遅れたり間引かれたりするため、1回の実行の中で
+# 5分ごとに予想を繰り返す（最長5時間45分、21:30 JST まで）。定期起動は30分ごとの保険で、
+# concurrency により同時に動くのは1つだけ（待ちは1件まで）。
+# 予想が増えたら data/predictions/ を push し、21_pages を起動してダッシュボードを更新する。
 
 on:
   schedule:
-    - cron: "*/10 23 * * *"   # 8:00〜8:59 JST
-    - cron: "*/10 0-12 * * *" # 9:00〜21:59 JST
+    - cron: "*/30 23 * * *"   # 8:00〜8:59 JST
+    - cron: "*/30 0-12 * * *" # 9:00〜21:59 JST
   workflow_dispatch:
 
 concurrency:
@@ -16,15 +18,12 @@ concurrency:
 
 permissions:
   contents: write
-  pages: write
-  id-token: write
+  actions: write
 
 jobs:
   predict:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    outputs:
-      changed: ${{ steps.commit.outputs.changed }}
+    timeout-minutes: 355
     defaults:
       run:
         working-directory: scripts
@@ -36,26 +35,32 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -r requirements.txt
-      - name: Predict
-        run: python -m br.main predict
-      - name: Commit and push
-        id: commit
+      - name: Predict loop
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add ../data/predictions
-          if ! git diff --cached --quiet; then
-            git commit -m "data: 当日の予想を記録 [skip ci]"
-            git pull --rebase -X theirs origin main
-            git push origin HEAD:main
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
-
-  pages:
-    needs: predict
-    if: needs.predict.outputs.changed == 'true'
-    uses: ./.github/workflows/21_pages.yml
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
+          end=$(( $(date +%s) + 340*60 ))
+          while :; do
+            hm=$(TZ=Asia/Tokyo date +%H%M)
+            if [ "$hm" -gt 2130 ] || [ "$hm" -lt 0745 ] || [ "$(date +%s)" -ge "$end" ]; then
+              echo "終了（JST $hm）"; break
+            fi
+            git pull -q --rebase -X theirs origin main || true
+            python -m br.main predict || echo "予想でエラー（次の回で再試行）"
+            mkdir -p ../data/predictions
+            git add ../data/predictions ../data/dashboard/run_status.json
+            if [ -n "$(git status --porcelain ../data/predictions)" ] || ! git diff --cached --quiet -- ../data/predictions; then
+              git commit -q -m "data: 当日の予想を記録 [skip ci]"
+              for i in 1 2 3; do
+                git pull -q --rebase -X theirs origin main && git push -q origin HEAD:main && break
+                sleep 10
+              done
+              gh workflow run 21_pages.yml --ref main || echo "ダッシュボード更新の起動に失敗"
+            else
+              git reset -q
+              git checkout -q -- ../data/dashboard/run_status.json 2>/dev/null || true
+            fi
+            sleep 300
+          done

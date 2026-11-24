@@ -55,6 +55,7 @@ def predict(now: dt.datetime | None = None) -> int:
     path = PRED_DIR / f"{hd}.csv"
     done = _existing(path)
     out = []
+    n_ready = n_window = 0
     for key, entries in sorted(prog.items()):
         if key in done or not entries[0]["deadline"]:
             continue
@@ -62,6 +63,8 @@ def predict(now: dt.datetime | None = None) -> int:
         mins = (dl - now).total_seconds() / 60
         pv = prev.get(key, [])
         ready = len(pv) == 6 and all(p.get("ex_time") not in ("", "0", "0.0") for p in pv)
+        n_ready += ready
+        n_window += LEAD_MIN <= mins <= WINDOW_MIN
         if not (LEAD_MIN <= mins <= WINDOW_MIN) or not ready:
             continue
         base = {"date": hd, "jcd": key[0], "rno": key[1], "grade": entries[0]["grade"],
@@ -86,5 +89,6 @@ def predict(now: dt.datetime | None = None) -> int:
             if new:
                 w.writeheader()
             w.writerows(out)
+    print(f"出走表 {len(prog)}R・直前情報 {len(prev)}R（展示タイム6艇そろい {n_ready}R）・締切{LEAD_MIN}〜{WINDOW_MIN}分前 {n_window}R")
     print(f"{hd} {now:%H:%M}: {len({(o['jcd'], o['rno']) for o in out})}レースを判定、購入{sum(o['decision'] == '購入' for o in out)}点")
     return len(out)
