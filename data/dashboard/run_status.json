@@ -292,5 +292,12 @@
   "days": 30,
   "races": 4812,
   "errors": 0
+ },
+ {
+  "at": "2026-11-24 09:44",
+  "kind": "backfill 2023-05",
+  "days": 31,
+  "races": 4800,
+  "errors": 0
  }
 ]
