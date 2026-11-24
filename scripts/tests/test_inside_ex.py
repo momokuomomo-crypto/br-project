@@ -27,6 +27,7 @@ def test_picks_and_summary(tmp_path):
     prev += p; pay += y
     store.upsert("preview", prev, tmp_path)
     store.upsert("payout", pay, tmp_path)
+    store.upsert("program", [{"date": "20261126", "jcd": "18", "rno": 1, "lane": 1, "racer_class": "B1"}], tmp_path)
 
     rows = inside_ex.picks(tmp_path, start="20261125")
     since = [r for r in rows if r["date"] >= "20261125"]
@@ -35,3 +36,5 @@ def test_picks_and_summary(tmp_path):
     assert s["since_win"]["return"] == 150 and s["since_place"]["return"] == 120
     tok = next(v for v in s["venues"] if v["jcd"] == "18")
     assert tok["since_win"]["bets"] == 1
+    assert since[0]["racer_class"] == "B1"
+    assert s["focus"]["since_place"]["bets"] == 0  # 徳山は注目条件（尼崎）の対象外
