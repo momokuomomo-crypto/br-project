@@ -103,8 +103,10 @@ class PayoutModel:
     def predict(self, r: Races, bet_type: str) -> np.ndarray:
         theta, s2 = self.coef[bet_type]
         theta = np.asarray(theta)
-        D = combo_design(r.x, bet_type)
-        return np.exp(theta[0] + D @ theta[1:] + s2 / 2)
+        out = np.empty((len(r), len(POS[bet_type][0])))
+        for s in range(0, len(r), CHUNK):
+            out[s:s + CHUNK] = np.exp(theta[0] + combo_design(r.x[s:s + CHUNK], bet_type) @ theta[1:] + s2 / 2)
+        return out
 
     def to_json(self) -> dict:
         return {k: {"theta": list(map(float, t)), "sigma2": float(s)} for k, (t, s) in self.coef.items()}
@@ -118,12 +120,11 @@ def fit_payout(r: Races, ridge: float = 1.0) -> PayoutModel:
     coef = {}
     for bt in ("win", "exacta", "trifecta"):
         pay = r.pay[bt]
-        rows, ys = [], []
-        D = combo_design(r.x, bt)
         n_idx, c_idx = np.nonzero(pay > 0)
         if len(n_idx) < 50:
             continue
-        X = np.concatenate([np.ones((len(n_idx), 1)), D[n_idx, c_idx]], axis=1)
+        # 的中した組合せの特徴量だけを作る（全組合せの行列は作らない）
+        X = np.concatenate([np.ones((len(n_idx), 1))] + [r.x[n_idx, idx[c_idx], :] for idx in POS[bt]], axis=1)
         y = np.log(pay[n_idx, c_idx])
         reg = ridge * np.eye(X.shape[1])
         reg[0, 0] = 0

@@ -17,6 +17,9 @@ TRI_KEYS = [f"{a+1}-{b+1}-{c+1}" for a, b, c in PERMS]
 EX_PAIRS = list(itertools.permutations(range(6), 2))
 EX_KEYS = [f"{a+1}-{b+1}" for a, b in EX_PAIRS]
 WIN_KEYS = [str(i) for i in range(1, 7)]
+TRI_INDEX = {k: i for i, k in enumerate(TRI_KEYS)}
+EX_INDEX = {k: i for i, k in enumerate(EX_KEYS)}
+WIN_INDEX = {k: i for i, k in enumerate(WIN_KEYS)}
 EX_FROM_TRI = np.zeros((30, 120))
 WIN_FROM_TRI = np.zeros((6, 120))
 for ci, (a, b, c) in enumerate(PERMS):
@@ -28,7 +31,9 @@ CLASS_CODE = {"A1": 3, "A2": 2, "B1": 1, "B2": 0}
 NUMERIC = ["class", "nat_win", "nat_2r", "loc_win", "loc_2r", "motor_2r", "boat_2r",
            "avg_st", "flying", "weight", "ex_time", "ex_st", "course"]
 LANES = [f"lane{i}" for i in range(1, 6)]  # 6号艇を基準とするダミー
-FEATURES = LANES + NUMERIC
+# 場ごとの1号艇の強さ（イン有利の度合いは場によって大きく違う）。jcd=01 を基準とする
+VENUE_IN = [f"in_{j:02d}" for j in range(2, 25)]
+FEATURES = LANES + VENUE_IN + NUMERIC
 
 
 @dataclass
@@ -61,7 +66,7 @@ def _f(v) -> float:
         return float("nan")
 
 
-def boat_features(entries: list[dict], previews: dict[int, dict]) -> np.ndarray:
+def boat_features(entries: list[dict], previews: dict[int, dict], jcd: str | None = None) -> np.ndarray:
     """6艇（枠番順）の特徴量。数値はレース内で標準化し、欠損はレース内平均（=0）。"""
     num = []
     for e in entries:
@@ -85,55 +90,68 @@ def boat_features(entries: list[dict], previews: dict[int, dict]) -> np.ndarray:
     lanes = np.zeros((6, len(LANES)))
     for i in range(5):
         lanes[i, i] = 1
-    return np.concatenate([lanes, a], axis=1)
+    venue = np.zeros((6, len(VENUE_IN)))
+    j = int(jcd or entries[0].get("jcd", 1) or 1)
+    if j >= 2:
+        venue[0, j - 2] = 1
+    return np.concatenate([lanes, venue, a], axis=1)
 
 
-def _group(kind, root):
+def _group(rows):
     out: dict[tuple, list] = {}
-    for r in store.iter_all(kind, root):
+    for r in rows:
         out.setdefault((r["date"], r["jcd"], int(r["rno"])), []).append(r)
     return out
 
 
 def load(root=None) -> Races:
+    """場・月フォルダごとに読み、必要な配列だけを残す（全期間を一度に辞書で持たない）。"""
     root = root or store.INPUT_DIR
-    prog = _group("program", root)
-    prev = _group("preview", root)
-    res = _group("result", root)
-    pays: dict[tuple, dict] = {}
-    for r in store.iter_all("payout", root):
-        pays.setdefault((r["date"], r["jcd"], int(r["rno"])), {}).setdefault(r["bet_type"], {})[r["combo"]] = int(r["payout"])
-    out = Races()
-    xs, wn, p_tri, p_ex, p_win = [], [], [], [], []
-    for k in sorted(res):
-        rr = res[k]
-        entries = sorted(prog.get(k, []), key=lambda e: int(e["lane"]))
-        if len(entries) != 6 or len(rr) != 6:
-            continue
-        places = [r["place"] for r in rr]
-        if not all(p.isdigit() and 1 <= int(p) <= 6 for p in places):
-            continue
-        tri = pays.get(k, {}).get("trifecta", {})
-        if len(tri) != 1:
-            continue
-        combo = next(iter(tri))
-        if combo not in TRI_KEYS:
-            continue
-        pv = {int(p["lane"]): p for p in prev.get(k, [])}
-        xs.append(boat_features(entries, pv))
-        wn.append(TRI_KEYS.index(combo))
-        pay = pays.get(k, {})
-        p_tri.append([tri.get(c, 0) for c in TRI_KEYS])
-        p_ex.append([pay.get("exacta", {}).get(c, 0) for c in EX_KEYS])
-        p_win.append([pay.get("win", {}).get(c, 0) for c in WIN_KEYS])
-        out.keys.append(k)
-        out.grade.append(entries[0].get("grade", ""))
-    n = len(out.keys)
-    out.x = np.array(xs, dtype=float).reshape(n, 6, len(FEATURES))
-    out.winner = np.array(wn, dtype=int)
-    out.pay = {"trifecta": np.array(p_tri, dtype=float).reshape(n, 120),
-               "exacta": np.array(p_ex, dtype=float).reshape(n, 30),
-               "win": np.array(p_win, dtype=float).reshape(n, 6)}
+    keys, grades, xs, wn, p_tri, p_ex, p_win = [], [], [], [], [], [], []
+    for mdir in sorted(p for p in root.glob("*/*") if p.is_dir()):
+        prog = _group(store.read("program", mdir))
+        prev = _group(store.read("preview", mdir))
+        res = _group(store.read("result", mdir))
+        pays: dict[tuple, dict] = {}
+        for r in store.read("payout", mdir):
+            pays.setdefault((r["date"], r["jcd"], int(r["rno"])), {}).setdefault(r["bet_type"], {})[r["combo"]] = int(r["payout"])
+        for k in sorted(res):
+            rr = res[k]
+            entries = sorted(prog.get(k, []), key=lambda e: int(e["lane"]))
+            if len(entries) != 6 or len(rr) != 6:
+                continue
+            if not all(r["place"].isdigit() and 1 <= int(r["place"]) <= 6 for r in rr):
+                continue
+            pay = pays.get(k, {})
+            tri = pay.get("trifecta", {})
+            if len(tri) != 1:
+                continue
+            combo = next(iter(tri))
+            if combo not in TRI_INDEX:
+                continue
+            pv = {int(p["lane"]): p for p in prev.get(k, [])}
+            xs.append(boat_features(entries, pv, k[1]).astype(np.float32))
+            wn.append(TRI_INDEX[combo])
+            ti = np.zeros(120, dtype=np.float32); ti[TRI_INDEX[combo]] = tri[combo]
+            ei = np.zeros(30, dtype=np.float32)
+            for c, v in pay.get("exacta", {}).items():
+                if c in EX_INDEX:
+                    ei[EX_INDEX[c]] = v
+            wi = np.zeros(6, dtype=np.float32)
+            for c, v in pay.get("win", {}).items():
+                if c in WIN_INDEX:
+                    wi[WIN_INDEX[c]] = v
+            p_tri.append(ti); p_ex.append(ei); p_win.append(wi)
+            keys.append(k)
+            grades.append(entries[0].get("grade", ""))
+    n = len(keys)
+    order = sorted(range(n), key=lambda i: (keys[i][0], keys[i][1], keys[i][2]))
+    out = Races(keys=[keys[i] for i in order], grade=[grades[i] for i in order])
+    out.x = (np.stack(xs)[order] if n else np.zeros((0, 6, len(FEATURES)))).astype(np.float64)
+    out.winner = np.array(wn, dtype=int)[order] if n else np.zeros(0, dtype=int)
+    out.pay = {"trifecta": np.stack(p_tri)[order] if n else np.zeros((0, 120)),
+               "exacta": np.stack(p_ex)[order] if n else np.zeros((0, 30)),
+               "win": np.stack(p_win)[order] if n else np.zeros((0, 6))}
     return out
 
 
@@ -143,5 +161,5 @@ def single_race(key: tuple, grade: str, entries: list[dict], previews: list[dict
     if len(entries) != 6:
         return None
     pv = {int(p["lane"]): p for p in previews}
-    return Races(keys=[key], grade=[grade], x=boat_features(entries, pv)[None], winner=np.array([-1]),
+    return Races(keys=[key], grade=[grade], x=boat_features(entries, pv, key[1])[None], winner=np.array([-1]),
                  pay={"trifecta": np.zeros((1, 120)), "exacta": np.zeros((1, 30)), "win": np.zeros((1, 6))})

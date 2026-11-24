@@ -8,7 +8,7 @@ name: 20 Analyze
 on:
   push:
     branches: [main]
-    paths: ["data/input/**"]
+    paths: ["data/input/**", "scripts/br/analysis/**"]
   workflow_call:
   workflow_dispatch:
 
@@ -24,7 +24,7 @@ permissions:
 jobs:
   analyze:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 240
     defaults:
       run:
         working-directory: scripts
