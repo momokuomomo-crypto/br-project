@@ -6,6 +6,7 @@ import datetime as dt
 import json
 from collections import defaultdict
 
+from br.analysis import inside_ex
 from br.collect import store
 from br.venues import VENUES
 
@@ -95,7 +96,11 @@ def collect_all() -> dict:
             if r["decision"] == "購入" and k in done:
                 r["return"] = pay_idx.get((*k, r["bet_type"], r["combo"]), 0)
             upcoming.append(r)
+    ix = inside_ex.summary(inside_ex.picks())
+    ix_rows = [{"date": r["date"], "jcd": r["jcd"], "rno": r["rno"], "return": r[b]} for r in ix.pop("since_rows") for b in ("win", "place")]
+    ix["since_series"] = summarize(ix_rows)
     return {
+        "inside": ix,
         "generated_at": dt.datetime.now(JST).strftime("%Y-%m-%d %H:%M"),
         "collection": collection_status(), "report": report, "model": model,
         "backtest": summarize(bt_rows), "live": summarize(live), "live_pending": sum(1 for r in live if not r["settled"]),

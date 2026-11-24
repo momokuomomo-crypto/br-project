@@ -67,6 +67,35 @@ def monthly(s: dict) -> str:
     return f'<div class="tbl"><table><tr><th>月</th><th>点数</th><th>購入額</th><th>払戻額</th><th>収支</th><th>回収率</th></tr>{rows}</table></div>'
 
 
+def _r(st: dict) -> str:
+    return f'{pct(st["roi"])}<span class="sub"> ({st["bets"]:,})</span>' if st["bets"] else "—"
+
+
+def inside_section(ix: dict) -> str:
+    st = ix["start"]
+    sw, sp = ix["since_win"], ix["since_place"]
+    k = ('<div class="kpis">'
+         f'<div class="kpi"><span>単勝 回収率</span><b>{pct(sw["roi"])}</b></div>'
+         f'<div class="kpi"><span>単勝 収支</span>{signed(sw["profit"])}</div>'
+         f'<div class="kpi"><span>複勝 回収率</span><b>{pct(sp["roi"])}</b></div>'
+         f'<div class="kpi"><span>複勝 収支</span>{signed(sp["profit"])}</div>'
+         f'<div class="kpi"><span>対象レース</span><b>{sw["bets"]:,}</b></div>'
+         f'<div class="kpi"><span>的中（単勝 / 複勝）</span><b>{sw["hits"]:,} / {sp["hits"]:,}</b></div></div>')
+    rows = "".join(
+        f'<tr><td>{esc(v["name"])}</td><td>{_r(v["since_win"])}</td><td>{pct(v["since_place"]["roi"]) if v["since_place"]["bets"] else "—"}</td>'
+        f'<td>{_r(v["all_win"])}</td><td>{pct(v["all_place"]["roi"]) if v["all_place"]["bets"] else "—"}</td></tr>'
+        for v in ix["venues"])
+    aw, ap = ix["all_win"], ix["all_place"]
+    rows += (f'<tr><td><b>全場</b></td><td>{_r(sw)}</td><td>{pct(sp["roi"])}</td><td>{_r(aw)}</td><td>{pct(ap["roi"])}</td></tr>')
+    s = f'{st[:4]}/{int(st[4:6])}/{int(st[6:])}'
+    return (f'<section class="card"><h2>試走1位の1号艇（全場・全レースの記録）</h2>'
+            f'<div class="sub">1号艇の展示タイムが、場・号艇ごとの平均との差で6艇中いちばん速いレースで、1号艇の単勝と複勝を100円ずつ買った場合。記録開始 {s}</div>'
+            f'{k}{sparkline(ix["since_series"]["series"])}'
+            f'<div class="tbl"><table><tr><th>場</th><th>記録開始から 単勝（点数）</th><th>複勝</th><th>全期間 {esc(ix["first"] or "")}〜 単勝（点数）</th><th>複勝</th></tr>{rows}</table></div>'
+            f'<div class="note">号艇ごとの平均タイムは記録開始より前のデータで計算し、以後は固定しています。全期間の欄は平均の計算に使ったデータも含むので、少し甘めの参考値です。'
+            f'場を後から選ぶと運で100%を超える場も出るため、場ごとの差は記録開始からの成績で確かめます。グラフは単勝・複勝を合わせた累積収支。実際の購入記録ではなくシミュレーションです。</div></section>')
+
+
 def build(out_dir: str) -> Path:
     d = collect_all()
     parts = [f'<main><h1>競艇 期待値派ダッシュボード</h1><div class="sub">更新 {esc(d["generated_at"])}（日本時間）・全24場・全グレード</div>']
@@ -93,6 +122,7 @@ def build(out_dir: str) -> Path:
     live, bt, rep = d["live"], d["backtest"], d["report"]
     parts.append(f'<section class="card"><h2>運用開始からの収支（予想記録どおりに買った場合）</h2>{kpis(live)}'
                  f'{sparkline(live["series"])}{monthly(live)}<div class="note">未確定 {d["live_pending"]}点。実際の購入記録ではなくシミュレーションです。</div></section>')
+    parts.append(inside_section(d["inside"]))
     if rep and rep.get("test"):
         per = rep["periods"]
         mk = rep.get("test_top_prob") or {}
