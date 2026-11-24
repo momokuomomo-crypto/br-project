@@ -1,0 +1,927 @@
+{
+  "generated_at": "2026-11-24 10:50",
+  "periods": {
+    "train": [
+      "20211124",
+      "20251123",
+      205692
+    ],
+    "valid": [
+      "20251124",
+      "20260523",
+      25640
+    ],
+    "test": [
+      "20260524",
+      "20261123",
+      26532
+    ]
+  },
+  "log_loss": {
+    "uniform": 4.787491742782046,
+    "model_valid": 3.8222152348035903,
+    "model_test": 3.8314498000390973
+  },
+  "candidates": [
+    {
+      "rule": {
+        "bet_type": "win",
+        "min_ev": 1.0,
+        "max_odds": 5,
+        "max_per_race": 2
+      },
+      "races": 15168,
+      "bets": 17824,
+      "hits": 8218,
+      "stake": 1782400,
+      "return": 1653240.0,
+      "profit": -129160.0,
+      "roi": 0.9275359066427289,
+      "hit_rate": 0.4610637342908438
+    },
+    {
+      "rule": {
+        "bet_type": "win",
+        "min_ev": 1.0,
+        "max_odds": 10,
+        "max_per_race": 2
+      },
+      "races": 15574,
+      "bets": 20322,
+      "hits": 8636,
+      "stake": 2032200,
+      "return": 1900160.0,
+      "profit": -132040.0,
+      "roi": 0.9350260801102254,
+      "hit_rate": 0.42495817340812914
+    },
+    {
+      "rule": {
+        "bet_type": "win",
+        "min_ev": 1.0,
+        "max_odds": 30,
+        "max_per_race": 2
+      },
+      "races": 15575,
+      "bets": 20332,
+      "hits": 8637,
+      "stake": 2033200,
+      "return": 1902680.0,
+      "profit": -130520.0,
+      "roi": 0.9358056265984654,
+      "hit_rate": 0.4247983474326185
+    },
+    {
+      "rule": {
+        "bet_type": "win",
+        "min_ev": 1.1,
+        "max_odds": 5,
+        "max_per_race": 2
+      },
+      "races": 8807,
+      "bets": 9336,
+      "hits": 4228,
+      "stake": 933600,
+      "return": 868450.0,
+      "profit": -65150.0,
+      "roi": 0.9302163667523564,
+      "hit_rate": 0.4528706083976007
+    },
+    {
+      "rule": {
+        "bet_type": "win",
+        "min_ev": 1.1,
+        "max_odds": 10,
+        "max_per_race": 2
+      },
+      "races": 9466,
+      "bets": 10985,
+      "hits": 4547,
+      "stake": 1098500,
+      "return": 1031870.0,
+      "profit": -66630.0,
+      "roi": 0.9393445607646791,
+      "hit_rate": 0.41392808375056894
+    },
+    {
+      "rule": {
+        "bet_type": "win",
+        "min_ev": 1.1,
+        "max_odds": 30,
+        "max_per_race": 2
+      },
+      "races": 9469,
+      "bets": 10996,
+      "hits": 4547,
+      "stake": 1099600,
+      "return": 1033030.0,
+      "profit": -66570.0,
+      "roi": 0.9394598035649327,
+      "hit_rate": 0.413514005092761
+    },
+    {
+      "rule": {
+        "bet_type": "win",
+        "min_ev": 1.2,
+        "max_odds": 5,
+        "max_per_race": 2
+      },
+      "races": 3783,
+      "bets": 3839,
+      "hits": 1718,
+      "stake": 383900,
+      "return": 364230.0,
+      "profit": -19670.0,
+      "roi": 0.9487626986194322,
+      "hit_rate": 0.4475123730138057
+    },
+    {
+      "rule": {
+        "bet_type": "win",
+        "min_ev": 1.2,
+        "max_odds": 10,
+        "max_per_race": 2
+      },
+      "races": 4354,
+      "bets": 4631,
+      "hits": 1879,
+      "stake": 463100,
+      "return": 436870.0,
+      "profit": -26230.0,
+      "roi": 0.9433599654502267,
+      "hit_rate": 0.4057438998056575
+    },
+    {
+      "rule": {
+        "bet_type": "win",
+        "min_ev": 1.2,
+        "max_odds": 30,
+        "max_per_race": 2
+      },
+      "races": 4354,
+      "bets": 4632,
+      "hits": 1879,
+      "stake": 463200,
+      "return": 436870.0,
+      "profit": -26330.0,
+      "roi": 0.9431563039723662,
+      "hit_rate": 0.40565630397236613
+    },
+    {
+      "rule": {
+        "bet_type": "win",
+        "min_ev": 1.3,
+        "max_odds": 5,
+        "max_per_race": 2
+      },
+      "races": 1219,
+      "bets": 1223,
+      "hits": 504,
+      "stake": 122300,
+      "return": 111750.0,
+      "profit": -10550.0,
+      "roi": 0.9137367130008177,
+      "hit_rate": 0.41210139002452983
+    },
+    {
+      "rule": {
+        "bet_type": "win",
+        "min_ev": 1.3,
+        "max_odds": 10,
+        "max_per_race": 2
+      },
+      "races": 1513,
+      "bets": 1557,
+      "hits": 582,
+      "stake": 155700,
+      "return": 148060.0,
+      "profit": -7640.0,
+      "roi": 0.9509312780989082,
+      "hit_rate": 0.3737957610789981
+    },
+    {
+      "rule": {
+        "bet_type": "win",
+        "min_ev": 1.3,
+        "max_odds": 30,
+        "max_per_race": 2
+      },
+      "races": 1513,
+      "bets": 1557,
+      "hits": 582,
+      "stake": 155700,
+      "return": 148060.0,
+      "profit": -7640.0,
+      "roi": 0.9509312780989082,
+      "hit_rate": 0.3737957610789981
+    },
+    {
+      "rule": {
+        "bet_type": "win",
+        "min_ev": 1.5,
+        "max_odds": 5,
+        "max_per_race": 2
+      },
+      "races": 60,
+      "bets": 60,
+      "hits": 26,
+      "stake": 6000,
+      "return": 6050.0,
+      "profit": 50.0,
+      "roi": 1.0083333333333333,
+      "hit_rate": 0.43333333333333335
+    },
+    {
+      "rule": {
+        "bet_type": "win",
+        "min_ev": 1.5,
+        "max_odds": 10,
+        "max_per_race": 2
+      },
+      "races": 103,
+      "bets": 103,
+      "hits": 35,
+      "stake": 10300,
+      "return": 9830.0,
+      "profit": -470.0,
+      "roi": 0.954368932038835,
+      "hit_rate": 0.33980582524271846
+    },
+    {
+      "rule": {
+        "bet_type": "win",
+        "min_ev": 1.5,
+        "max_odds": 30,
+        "max_per_race": 2
+      },
+      "races": 103,
+      "bets": 103,
+      "hits": 35,
+      "stake": 10300,
+      "return": 9830.0,
+      "profit": -470.0,
+      "roi": 0.954368932038835,
+      "hit_rate": 0.33980582524271846
+    },
+    {
+      "rule": {
+        "bet_type": "win",
+        "min_ev": 2.0,
+        "max_odds": 5,
+        "max_per_race": 2
+      },
+      "races": 0,
+      "bets": 0,
+      "hits": 0,
+      "stake": 0,
+      "return": 0.0,
+      "profit": 0.0,
+      "roi": null,
+      "hit_rate": null
+    },
+    {
+      "rule": {
+        "bet_type": "win",
+        "min_ev": 2.0,
+        "max_odds": 10,
+        "max_per_race": 2
+      },
+      "races": 0,
+      "bets": 0,
+      "hits": 0,
+      "stake": 0,
+      "return": 0.0,
+      "profit": 0.0,
+      "roi": null,
+      "hit_rate": null
+    },
+    {
+      "rule": {
+        "bet_type": "win",
+        "min_ev": 2.0,
+        "max_odds": 30,
+        "max_per_race": 2
+      },
+      "races": 0,
+      "bets": 0,
+      "hits": 0,
+      "stake": 0,
+      "return": 0.0,
+      "profit": 0.0,
+      "roi": null,
+      "hit_rate": null
+    },
+    {
+      "rule": {
+        "bet_type": "exacta",
+        "min_ev": 1.0,
+        "max_odds": 20,
+        "max_per_race": 2
+      },
+      "races": 15013,
+      "bets": 27116,
+      "hits": 4025,
+      "stake": 2711600,
+      "return": 2220630.0,
+      "profit": -490970.0,
+      "roi": 0.8189371588729901,
+      "hit_rate": 0.14843634754388552
+    },
+    {
+      "rule": {
+        "bet_type": "exacta",
+        "min_ev": 1.0,
+        "max_odds": 50,
+        "max_per_race": 2
+      },
+      "races": 15073,
+      "bets": 27351,
+      "hits": 3893,
+      "stake": 2735100,
+      "return": 2256220.0,
+      "profit": -478880.0,
+      "roi": 0.8249131658805894,
+      "hit_rate": 0.14233483236444736
+    },
+    {
+      "rule": {
+        "bet_type": "exacta",
+        "min_ev": 1.0,
+        "max_odds": 150,
+        "max_per_race": 2
+      },
+      "races": 15073,
+      "bets": 27351,
+      "hits": 3892,
+      "stake": 2735100,
+      "return": 2260080.0,
+      "profit": -475020.0,
+      "roi": 0.8263244488318526,
+      "hit_rate": 0.14229827062995867
+    },
+    {
+      "rule": {
+        "bet_type": "exacta",
+        "min_ev": 1.1,
+        "max_odds": 20,
+        "max_per_race": 2
+      },
+      "races": 11106,
+      "bets": 19151,
+      "hits": 2647,
+      "stake": 1915100,
+      "return": 1543520.0,
+      "profit": -371580.0,
+      "roi": 0.8059735784032166,
+      "hit_rate": 0.1382173254660331
+    },
+    {
+      "rule": {
+        "bet_type": "exacta",
+        "min_ev": 1.1,
+        "max_odds": 50,
+        "max_per_race": 2
+      },
+      "races": 11237,
+      "bets": 19659,
+      "hits": 2549,
+      "stake": 1965900,
+      "return": 1586110.0,
+      "profit": -379790.0,
+      "roi": 0.8068111297624497,
+      "hit_rate": 0.1296607151940587
+    },
+    {
+      "rule": {
+        "bet_type": "exacta",
+        "min_ev": 1.1,
+        "max_odds": 150,
+        "max_per_race": 2
+      },
+      "races": 11237,
+      "bets": 19659,
+      "hits": 2548,
+      "stake": 1965900,
+      "return": 1589970.0,
+      "profit": -375930.0,
+      "roi": 0.808774607050206,
+      "hit_rate": 0.12960984790681113
+    },
+    {
+      "rule": {
+        "bet_type": "exacta",
+        "min_ev": 1.2,
+        "max_odds": 20,
+        "max_per_race": 2
+      },
+      "races": 7463,
+      "bets": 12113,
+      "hits": 1592,
+      "stake": 1211300,
+      "return": 979800.0,
+      "profit": -231500.0,
+      "roi": 0.8088830182448609,
+      "hit_rate": 0.13142904317675225
+    },
+    {
+      "rule": {
+        "bet_type": "exacta",
+        "min_ev": 1.2,
+        "max_odds": 50,
+        "max_per_race": 2
+      },
+      "races": 7750,
+      "bets": 13062,
+      "hits": 1564,
+      "stake": 1306200,
+      "return": 1067030.0,
+      "profit": -239170.0,
+      "roi": 0.816896340529781,
+      "hit_rate": 0.11973664063696218
+    },
+    {
+      "rule": {
+        "bet_type": "exacta",
+        "min_ev": 1.2,
+        "max_odds": 150,
+        "max_per_race": 2
+      },
+      "races": 7751,
+      "bets": 13063,
+      "hits": 1563,
+      "stake": 1306300,
+      "return": 1070890.0,
+      "profit": -235410.0,
+      "roi": 0.8197887162213886,
+      "hit_rate": 0.11965092245272908
+    },
+    {
+      "rule": {
+        "bet_type": "exacta",
+        "min_ev": 1.3,
+        "max_odds": 20,
+        "max_per_race": 2
+      },
+      "races": 4465,
+      "bets": 6619,
+      "hits": 844,
+      "stake": 661900,
+      "return": 544310.0,
+      "profit": -117590.0,
+      "roi": 0.8223447650702523,
+      "hit_rate": 0.1275117087173289
+    },
+    {
+      "rule": {
+        "bet_type": "exacta",
+        "min_ev": 1.3,
+        "max_odds": 50,
+        "max_per_race": 2
+      },
+      "races": 4922,
+      "bets": 7899,
+      "hits": 867,
+      "stake": 789900,
+      "return": 634960.0,
+      "profit": -154940.0,
+      "roi": 0.803848588428915,
+      "hit_rate": 0.10976072920622863
+    },
+    {
+      "rule": {
+        "bet_type": "exacta",
+        "min_ev": 1.3,
+        "max_odds": 150,
+        "max_per_race": 2
+      },
+      "races": 4923,
+      "bets": 7901,
+      "hits": 866,
+      "stake": 790100,
+      "return": 638820.0,
+      "profit": -151280.0,
+      "roi": 0.8085305657511708,
+      "hit_rate": 0.10960637893937476
+    },
+    {
+      "rule": {
+        "bet_type": "exacta",
+        "min_ev": 1.5,
+        "max_odds": 20,
+        "max_per_race": 2
+      },
+      "races": 1046,
+      "bets": 1281,
+      "hits": 154,
+      "stake": 128100,
+      "return": 108620.0,
+      "profit": -19480.0,
+      "roi": 0.8479313036690086,
+      "hit_rate": 0.12021857923497267
+    },
+    {
+      "rule": {
+        "bet_type": "exacta",
+        "min_ev": 1.5,
+        "max_odds": 50,
+        "max_per_race": 2
+      },
+      "races": 1455,
+      "bets": 2044,
+      "hits": 193,
+      "stake": 204400,
+      "return": 177150.0,
+      "profit": -27250.0,
+      "roi": 0.8666829745596869,
+      "hit_rate": 0.09442270058708414
+    },
+    {
+      "rule": {
+        "bet_type": "exacta",
+        "min_ev": 1.5,
+        "max_odds": 150,
+        "max_per_race": 2
+      },
+      "races": 1458,
+      "bets": 2051,
+      "hits": 192,
+      "stake": 205100,
+      "return": 176130.0,
+      "profit": -28970.0,
+      "roi": 0.8587518283764017,
+      "hit_rate": 0.09361287176986836
+    },
+    {
+      "rule": {
+        "bet_type": "exacta",
+        "min_ev": 2.0,
+        "max_odds": 20,
+        "max_per_race": 2
+      },
+      "races": 4,
+      "bets": 4,
+      "hits": 0,
+      "stake": 400,
+      "return": 0.0,
+      "profit": -400.0,
+      "roi": 0.0,
+      "hit_rate": 0.0
+    },
+    {
+      "rule": {
+        "bet_type": "exacta",
+        "min_ev": 2.0,
+        "max_odds": 50,
+        "max_per_race": 2
+      },
+      "races": 14,
+      "bets": 15,
+      "hits": 0,
+      "stake": 1500,
+      "return": 0.0,
+      "profit": -1500.0,
+      "roi": 0.0,
+      "hit_rate": 0.0
+    },
+    {
+      "rule": {
+        "bet_type": "exacta",
+        "min_ev": 2.0,
+        "max_odds": 150,
+        "max_per_race": 2
+      },
+      "races": 14,
+      "bets": 15,
+      "hits": 0,
+      "stake": 1500,
+      "return": 0.0,
+      "profit": -1500.0,
+      "roi": 0.0,
+      "hit_rate": 0.0
+    },
+    {
+      "rule": {
+        "bet_type": "trifecta",
+        "min_ev": 1.0,
+        "max_odds": 50,
+        "max_per_race": 2
+      },
+      "races": 17308,
+      "bets": 33004,
+      "hits": 2133,
+      "stake": 3300400,
+      "return": 2771230.0,
+      "profit": -529170.0,
+      "roi": 0.839664889104351,
+      "hit_rate": 0.06462852987516665
+    },
+    {
+      "rule": {
+        "bet_type": "trifecta",
+        "min_ev": 1.0,
+        "max_odds": 200,
+        "max_per_race": 2
+      },
+      "races": 17488,
+      "bets": 33536,
+      "hits": 2023,
+      "stake": 3353600,
+      "return": 2821360.0,
+      "profit": -532240.0,
+      "roi": 0.8412929389312978,
+      "hit_rate": 0.06032323473282443
+    },
+    {
+      "rule": {
+        "bet_type": "trifecta",
+        "min_ev": 1.0,
+        "max_odds": 1000,
+        "max_per_race": 2
+      },
+      "races": 17488,
+      "bets": 33536,
+      "hits": 2024,
+      "stake": 3353600,
+      "return": 2826130.0,
+      "profit": -527470.0,
+      "roi": 0.8427152910305343,
+      "hit_rate": 0.060353053435114504
+    },
+    {
+      "rule": {
+        "bet_type": "trifecta",
+        "min_ev": 1.1,
+        "max_odds": 50,
+        "max_per_race": 2
+      },
+      "races": 13799,
+      "bets": 25890,
+      "hits": 1535,
+      "stake": 2589000,
+      "return": 2167480.0,
+      "profit": -421520.0,
+      "roi": 0.8371881035148706,
+      "hit_rate": 0.05928930088837389
+    },
+    {
+      "rule": {
+        "bet_type": "trifecta",
+        "min_ev": 1.1,
+        "max_odds": 200,
+        "max_per_race": 2
+      },
+      "races": 14049,
+      "bets": 26608,
+      "hits": 1442,
+      "stake": 2660800,
+      "return": 2256830.0,
+      "profit": -403970.0,
+      "roi": 0.8481772399278412,
+      "hit_rate": 0.054194227300060134
+    },
+    {
+      "rule": {
+        "bet_type": "trifecta",
+        "min_ev": 1.1,
+        "max_odds": 1000,
+        "max_per_race": 2
+      },
+      "races": 14049,
+      "bets": 26608,
+      "hits": 1443,
+      "stake": 2660800,
+      "return": 2261600.0,
+      "profit": -399200.0,
+      "roi": 0.8499699338544798,
+      "hit_rate": 0.05423180998196031
+    },
+    {
+      "rule": {
+        "bet_type": "trifecta",
+        "min_ev": 1.2,
+        "max_odds": 50,
+        "max_per_race": 2
+      },
+      "races": 10531,
+      "bets": 19240,
+      "hits": 1055,
+      "stake": 1924000,
+      "return": 1606340.0,
+      "profit": -317660.0,
+      "roi": 0.8348960498960499,
+      "hit_rate": 0.05483367983367984
+    },
+    {
+      "rule": {
+        "bet_type": "trifecta",
+        "min_ev": 1.2,
+        "max_odds": 200,
+        "max_per_race": 2
+      },
+      "races": 10913,
+      "bets": 20377,
+      "hits": 979,
+      "stake": 2037700,
+      "return": 1722670.0,
+      "profit": -315030.0,
+      "roi": 0.8453992246159886,
+      "hit_rate": 0.04804436374343623
+    },
+    {
+      "rule": {
+        "bet_type": "trifecta",
+        "min_ev": 1.2,
+        "max_odds": 1000,
+        "max_per_race": 2
+      },
+      "races": 10913,
+      "bets": 20378,
+      "hits": 980,
+      "stake": 2037800,
+      "return": 1727440.0,
+      "profit": -310360.0,
+      "roi": 0.8476984983806065,
+      "hit_rate": 0.048091078614191776
+    },
+    {
+      "rule": {
+        "bet_type": "trifecta",
+        "min_ev": 1.3,
+        "max_odds": 50,
+        "max_per_race": 2
+      },
+      "races": 7580,
+      "bets": 13239,
+      "hits": 701,
+      "stake": 1323900,
+      "return": 1112840.0,
+      "profit": -211060.0,
+      "roi": 0.8405770828612433,
+      "hit_rate": 0.05294961855125009
+    },
+    {
+      "rule": {
+        "bet_type": "trifecta",
+        "min_ev": 1.3,
+        "max_odds": 200,
+        "max_per_race": 2
+      },
+      "races": 8155,
+      "bets": 14942,
+      "hits": 666,
+      "stake": 1494200,
+      "return": 1287070.0,
+      "profit": -207130.0,
+      "roi": 0.8613773256592157,
+      "hit_rate": 0.0445723464061036
+    },
+    {
+      "rule": {
+        "bet_type": "trifecta",
+        "min_ev": 1.3,
+        "max_odds": 1000,
+        "max_per_race": 2
+      },
+      "races": 8155,
+      "bets": 14942,
+      "hits": 667,
+      "stake": 1494200,
+      "return": 1291840.0,
+      "profit": -202360.0,
+      "roi": 0.8645696693883015,
+      "hit_rate": 0.04463927185115781
+    },
+    {
+      "rule": {
+        "bet_type": "trifecta",
+        "min_ev": 1.5,
+        "max_odds": 50,
+        "max_per_race": 2
+      },
+      "races": 2874,
+      "bets": 4358,
+      "hits": 210,
+      "stake": 435800,
+      "return": 356250.0,
+      "profit": -79550.0,
+      "roi": 0.8174621385956861,
+      "hit_rate": 0.048187241854061494
+    },
+    {
+      "rule": {
+        "bet_type": "trifecta",
+        "min_ev": 1.5,
+        "max_odds": 200,
+        "max_per_race": 2
+      },
+      "races": 3895,
+      "bets": 6773,
+      "hits": 238,
+      "stake": 677300,
+      "return": 575690.0,
+      "profit": -101610.0,
+      "roi": 0.8499778532408091,
+      "hit_rate": 0.035139524582902704
+    },
+    {
+      "rule": {
+        "bet_type": "trifecta",
+        "min_ev": 1.5,
+        "max_odds": 1000,
+        "max_per_race": 2
+      },
+      "races": 3896,
+      "bets": 6775,
+      "hits": 239,
+      "stake": 677500,
+      "return": 580460.0,
+      "profit": -97040.0,
+      "roi": 0.8567675276752768,
+      "hit_rate": 0.035276752767527675
+    },
+    {
+      "rule": {
+        "bet_type": "trifecta",
+        "min_ev": 2.0,
+        "max_odds": 50,
+        "max_per_race": 2
+      },
+      "races": 25,
+      "bets": 27,
+      "hits": 2,
+      "stake": 2700,
+      "return": 3300.0,
+      "profit": 600.0,
+      "roi": 1.2222222222222223,
+      "hit_rate": 0.07407407407407407
+    },
+    {
+      "rule": {
+        "bet_type": "trifecta",
+        "min_ev": 2.0,
+        "max_odds": 200,
+        "max_per_race": 2
+      },
+      "races": 162,
+      "bets": 219,
+      "hits": 7,
+      "stake": 21900,
+      "return": 29830.0,
+      "profit": 7930.0,
+      "roi": 1.3621004566210047,
+      "hit_rate": 0.0319634703196347
+    },
+    {
+      "rule": {
+        "bet_type": "trifecta",
+        "min_ev": 2.0,
+        "max_odds": 1000,
+        "max_per_race": 2
+      },
+      "races": 162,
+      "bets": 221,
+      "hits": 7,
+      "stake": 22100,
+      "return": 29830.0,
+      "profit": 7730.0,
+      "roi": 1.3497737556561087,
+      "hit_rate": 0.03167420814479638
+    }
+  ],
+  "selected": {
+    "rule": {
+      "bet_type": "win",
+      "min_ev": 1.3,
+      "max_odds": 10,
+      "max_per_race": 2
+    },
+    "races": 1513,
+    "bets": 1557,
+    "hits": 582,
+    "stake": 155700,
+    "return": 148060.0,
+    "profit": -7640.0,
+    "roi": 0.9509312780989082,
+    "hit_rate": 0.3737957610789981
+  },
+  "test": {
+    "races": 1498,
+    "bets": 1549,
+    "hits": 589,
+    "stake": 154900,
+    "return": 142550.0,
+    "profit": -12350.0,
+    "roi": 0.920271142672692,
+    "hit_rate": 0.3802453195610071
+  },
+  "test_top_prob": {
+    "races": 26532,
+    "bets": 53064,
+    "hits": 20263,
+    "stake": 5306400,
+    "return": 4511890.0,
+    "profit": -794510.0,
+    "roi": 0.850273254937434,
+    "hit_rate": 0.3818596411879994
+  }
+}
