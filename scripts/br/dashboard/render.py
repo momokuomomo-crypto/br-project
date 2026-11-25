@@ -107,19 +107,34 @@ def build(out_dir: str) -> Path:
     preds = d["predictions"]
     buys = [p for p in preds if p["decision"] == "購入"]
     rule = (d["model"] or {}).get("rule")
+    margin = float(rule["min_ev"]) if rule else 1.3
+    now_hm = d["generated_at"][11:16]
+    today = d["generated_at"][:10].replace("-", "")
+
+    def need(p):
+        pr = float(p.get("prob") or 0)
+        return f"{margin / pr:.1f}倍" if pr > 0 else ""
+
+    # 購入：結果つきで全部。見送り：締切前のものだけ（公式の実オッズが基準以上なら買える）
+    show = [p for p in preds if p.get("combo") and (p["decision"] == "購入" or (p["date"] == today and p["deadline"] >= now_hm))]
     body = ""
-    if buys:
+    if show:
         rows = "".join(
-            f'<tr><td>{esc(p["deadline"])}</td><td class="l">{esc(VENUES.get(p["jcd"], p["jcd"]))} {int(p["rno"])}R</td><td class="l">{esc(p["grade"])}</td>'
-            f'<td class="l">{esc(LABEL.get(p["bet_type"], p["bet_type"]))} {esc(p["combo"])}</td><td>{float(p["odds"]):.1f}</td><td>{float(p["prob"]) * 100:.1f}%</td><td>{float(p["ev"]):.2f}</td>'
+            f'<tr><td>{esc(p["deadline"])}</td><td class="l">{esc(VENUES.get(p["jcd"], p["jcd"]))} {int(p["rno"])}R</td>'
+            f'<td class="l">{"<b>購入</b>" if p["decision"] == "購入" else "見送り"}</td>'
+            f'<td class="l">{esc(LABEL.get(p["bet_type"], p["bet_type"]))} {esc(p["combo"])}</td><td>{float(p["prob"]) * 100:.1f}%</td><td>{float(p["odds"]):.1f}</td>'
+            f'<td><b>{need(p)}</b></td><td>{float(p["ev"]):.2f}</td>'
             f'<td>{"" if p.get("return") is None else ("的中 " + format(p["return"], ",") + "円" if p["return"] else "不的中")}</td></tr>'
-            for p in sorted(buys, key=lambda p: (p["date"], p["deadline"])))
-        body = f'<div class="tbl"><table><tr><th>締切</th><th class="l">レース</th><th class="l">グレード</th><th class="l">買い目</th><th>オッズ</th><th>推定確率</th><th>期待値</th><th>結果</th></tr>{rows}</table></div>'
+            for p in sorted(show, key=lambda p: (p["date"], p["deadline"])))
+        body = (f'<div class="tbl"><table><tr><th>締切</th><th class="l">レース</th><th class="l">判定</th><th class="l">買い目</th><th>推定確率</th>'
+                f'<th>想定オッズ</th><th>実オッズがこれ以上なら買い</th><th>期待値</th><th>結果</th></tr>{rows}</table></div>'
+                f'<div class="note">「実オッズがこれ以上なら買い」＝ {margin} ÷ 推定確率。締切直前に公式サイトの実際のオッズを見て、'
+                f'この倍率以上なら期待値が基準（{margin}）を超えます。見送りのレースも、実オッズが基準以上なら買う価値があります。</div>')
     else:
-        body = '<p>現在、おすすめはありません（割安な買い目が無いレースは見送ります）。</p>'
+        body = '<p>現在、判定済みで締切前のレースはありません。展示タイムがそろったレースから順に表示します（締切の約5〜15分前）。</p>'
     seen = len({(p["jcd"], p["rno"]) for p in preds})
     rtxt = f'ルール：{esc(LABEL.get(rule["bet_type"]))}、期待値 {rule["min_ev"]} 以上、想定オッズ {rule["max_odds"]} 倍以下、1レース{rule["max_per_race"]}点まで、1点100円。' if rule else "運用モデルはまだありません。"
-    parts.append(f'<section class="card"><h2>次のレースのおすすめ</h2>{body}<div class="note">{seen}レースを判定し、購入{len(buys)}点。{rtxt}想定オッズは過去の払戻実績から推定した値で、実際のオッズではありません（オッズの履歴を自動で取れる正規の入手先が無いため）。収支は実際の払戻金で計算します。</div></section>')
+    parts.append(f'<section class="card"><h2>次のレースの判定</h2>{body}<div class="note">{seen}レースを判定し、購入{len(buys)}点。{rtxt}想定オッズは過去の払戻実績から推定した値で、実際のオッズではありません（オッズの履歴を自動で取れる正規の入手先が無いため）。収支は実際の払戻金で計算します。</div></section>')
 
     # 収支
     live, bt, rep = d["live"], d["backtest"], d["report"]
