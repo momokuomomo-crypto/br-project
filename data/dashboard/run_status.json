@@ -343,10 +343,10 @@
   "errors": 0
  },
  {
-  "at": "2026-11-25 11:31",
-  "kind": "predict",
-  "days": 1,
-  "races": 2,
+  "at": "2026-11-25 11:32",
+  "kind": "yesterday",
+  "days": 7,
+  "races": 1080,
   "errors": 0
  }
 ]
