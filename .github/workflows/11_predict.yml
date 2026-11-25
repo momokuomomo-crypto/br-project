@@ -66,6 +66,8 @@ jobs:
             python -m br.main predict || echo "予想でエラー（次の回で再試行）"
             mkdir -p ../data/predictions
             git add ../data/predictions
+            # 予想以外の変更（実行履歴など）は捨てる。残すと次の pull --rebase が失敗して push できない
+            git -C .. checkout -q -- .
             if ! git diff --cached --quiet -- ../data/predictions; then
               git commit -q -m "data: 当日の予想を記録 [skip ci]"
               for i in 1 2 3; do

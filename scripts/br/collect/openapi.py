@@ -140,7 +140,8 @@ def get_live(hd: str, session: requests.Session | None = None) -> tuple[list[dic
     err = None
     for i in range(RETRIES + 1):
         try:
-            r = s.get(url, timeout=60)
+            # GitHub Pages の配信キャッシュ（約10分）を避けるため、毎回違う問い合わせ文字列を付ける
+            r = s.get(url, params={"t": int(time.time())}, timeout=60, headers={"Cache-Control": "no-cache"})
             if r.status_code == 404:
                 return [], []
             if r.status_code == 200:
