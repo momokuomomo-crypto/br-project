@@ -1,8 +1,10 @@
 name: 11 Predict
 
 # 06_01_自動実行設計.md 4章。
-# GitHub の定期実行は混雑時に大きく遅れたり間引かれたりするため、1回の実行の中で
-# 5分ごとに予想を繰り返す（最長5時間45分、21:30 JST まで）。定期起動は30分ごとの保険で、
+# GitHub の定期実行は混雑時に大きく遅れたり、まったく動かないことがある（2026-11-25 朝は1回も起動せず）。
+# そのため、この実行は5時間40分動き続け、終わる直前に自分自身を workflow_dispatch で起動し直す（リレー）。
+# 7:45〜21:30 JST は5分ごとに予想し、6:00〜7:45 JST には毎朝の収集（10_collect）も起動する。
+# それ以外の時間は待つだけ。定期起動（30分ごと）は、リレーが切れたときの保険。
 # concurrency により同時に動くのは1つだけ（待ちは1件まで）。
 # 予想が増えたら data/predictions/ を push し、21_pages を起動してダッシュボードを更新する。
 
@@ -51,25 +53,32 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           end=$(( $(date +%s) + 340*60 ))
-          while :; do
+          collected=""
+          while [ "$(date +%s)" -lt "$end" ]; do
             hm=$(TZ=Asia/Tokyo date +%H%M)
-            if [ "$hm" -gt 2130 ] || [ "$hm" -lt 0745 ] || [ "$(date +%s)" -ge "$end" ]; then
-              echo "終了（JST $hm）"; break
+            if [ "$hm" -ge 0600 ] && [ "$hm" -lt 0745 ] && [ -z "$collected" ]; then
+              gh workflow run 10_collect.yml --ref main && collected=1 || echo "収集の起動に失敗"
+            fi
+            if [ "$hm" -lt 0745 ] || [ "$hm" -gt 2130 ]; then
+              sleep 300; continue
             fi
             git pull -q --rebase -X theirs origin main || true
             python -m br.main predict || echo "予想でエラー（次の回で再試行）"
             mkdir -p ../data/predictions
-            git add ../data/predictions ../data/dashboard/run_status.json
-            if [ -n "$(git status --porcelain ../data/predictions)" ] || ! git diff --cached --quiet -- ../data/predictions; then
+            git add ../data/predictions
+            if ! git diff --cached --quiet -- ../data/predictions; then
               git commit -q -m "data: 当日の予想を記録 [skip ci]"
               for i in 1 2 3; do
                 git pull -q --rebase -X theirs origin main && git push -q origin HEAD:main && break
                 sleep 10
               done
               gh workflow run 21_pages.yml --ref main || echo "ダッシュボード更新の起動に失敗"
-            else
-              git reset -q
-              git checkout -q -- ../data/dashboard/run_status.json 2>/dev/null || true
             fi
+            git -C .. checkout -q -- . 2>/dev/null || true
             sleep 300
           done
+      - name: Relay (次の実行を起動)
+        if: ${{ always() && !inputs.once }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run 11_predict.yml --ref main
