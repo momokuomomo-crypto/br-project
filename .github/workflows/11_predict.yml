@@ -3,7 +3,7 @@ name: 11 Predict
 # 06_01_自動実行設計.md 4章。
 # GitHub の定期実行は混雑時に大きく遅れたり、まったく動かないことがある（2026-11-25 朝は1回も起動せず）。
 # そのため、この実行は5時間40分動き続け、終わる直前に自分自身を workflow_dispatch で起動し直す（リレー）。
-# 7:45〜21:30 JST は5分ごとに予想し、6:00〜7:45 JST には毎朝の収集（10_collect）も起動する。
+# 7:45〜21:30 JST は2分ごとに予想し（直前情報は締切の約5〜15分前にしか出ないため）、6:00〜7:45 JST には毎朝の収集（10_collect）も起動する。
 # それ以外の時間は待つだけ。定期起動（30分ごと）は、リレーが切れたときの保険。
 # concurrency により同時に動くのは1つだけ（待ちは1件まで）。
 # 予想が増えたら data/predictions/ を push し、21_pages を起動してダッシュボードを更新する。
@@ -77,7 +77,7 @@ jobs:
               gh workflow run 21_pages.yml --ref main || echo "ダッシュボード更新の起動に失敗"
             fi
             git -C .. checkout -q -- . 2>/dev/null || true
-            sleep 300
+            sleep 120
           done
       - name: Relay (次の実行を起動)
         if: ${{ always() && !inputs.once }}
