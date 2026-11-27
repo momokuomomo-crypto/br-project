@@ -1,12 +1,5 @@
 [
  {
-  "at": "2026-11-24 09:06",
-  "kind": "backfill 2025-05",
-  "days": 31,
-  "races": 5112,
-  "errors": 0
- },
- {
   "at": "2026-11-24 09:08",
   "kind": "backfill 2025-04",
   "days": 30,
@@ -347,6 +340,13 @@
   "kind": "yesterday",
   "days": 7,
   "races": 1116,
+  "errors": 0
+ },
+ {
+  "at": "2026-11-28 06:04",
+  "kind": "yesterday",
+  "days": 7,
+  "races": 1140,
   "errors": 0
  }
 ]
